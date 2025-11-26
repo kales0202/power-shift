@@ -41,7 +41,7 @@ To add a new language, create a new JSON file following the existing format.
 ### Project Structure
 
 ```
-power-mode/
+power-shift/
 ├── src/
 │   ├── PowerShift.csproj      # Project file
 │   ├── Program.cs             # Entry point
@@ -63,8 +63,8 @@ power-mode/
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/power-mode.git
-cd power-mode/src
+git clone https://github.com/kales0202/power-shift.git
+cd power-shift/src
 
 # Development build
 dotnet build

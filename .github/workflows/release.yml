@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -61,12 +63,36 @@ jobs:
           $destination = "PowerShift-${version}_x64.exe"
           Copy-Item $source $destination
         shell: pwsh
+
+      - name: Generate Release Notes
+        run: |
+          $currentTag = "${{ github.ref_name }}"
+          try {
+            $previousTag = git describe --tags --abbrev=0 "$currentTag^" 2>$null
+          } catch {
+            $previousTag = $null
+          }
+
+          if ($previousTag) {
+            Write-Host "Generating notes from $previousTag to $currentTag"
+            $commits = git log "$previousTag..$currentTag" --pretty=format:"- %s"
+          } else {
+            Write-Host "No previous tag found, generating notes for all commits"
+            $commits = git log --pretty=format:"- %s"
+          }
+
+          # Deduplicate commits
+          $uniqueCommits = $commits | Select-Object -Unique
+
+          $releaseNotes = "## Changes`n`n" + ($uniqueCommits -join "`n")
+          $releaseNotes | Out-File -FilePath release_notes.md -Encoding utf8
+        shell: pwsh
       
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: PowerShift-${{ steps.get_version.outputs.VERSION }}_x64.exe
-          generate_release_notes: true
+          body_path: release_notes.md
           draft: false
           prerelease: false
         env:

@@ -41,7 +41,7 @@ PowerShift 通过 `src/i18n/` 中的 JSON 文件支持多语言：
 ### 项目结构
 
 ```
-power-mode/
+power-shift/
 ├── src/
 │   ├── PowerShift.csproj      # 项目文件
 │   ├── Program.cs             # 入口点
@@ -63,8 +63,8 @@ power-mode/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/power-mode.git
-cd power-mode/src
+git clone https://github.com/kales0202/power-shift.git
+cd power-shift/src
 
 # 开发构建
 dotnet build
