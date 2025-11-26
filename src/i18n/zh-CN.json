@@ -1,0 +1,12 @@
+{
+    "MenuStartOnBoot": "开机启动",
+    "MenuStatusAC": "当前状态: 已接通电源",
+    "MenuStatusDC": "当前状态: 使用电池",
+    "MenuEfficiency": "最佳能效",
+    "MenuBalanced": "平衡",
+    "MenuPerformance": "最佳性能",
+    "MenuExit": "退出",
+    "AppName": "PowerShift",
+    "ErrorNotSupported": "您的设备不支持电源模式切换功能。\n(未检测到 ActiveOverlayAcPowerScheme)",
+    "ErrorNotSupportedTitle": "不支持"
+}

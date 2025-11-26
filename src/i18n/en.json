@@ -1,0 +1,12 @@
+{
+    "MenuStartOnBoot": "Start on Boot",
+    "MenuStatusAC": "Status: Plugged in",
+    "MenuStatusDC": "Status: On battery",
+    "MenuEfficiency": "Best Power Efficiency",
+    "MenuBalanced": "Balanced",
+    "MenuPerformance": "Best Performance",
+    "MenuExit": "Exit",
+    "AppName": "PowerShift",
+    "ErrorNotSupported": "Your device does not support power mode switching.\n(ActiveOverlayAcPowerScheme not detected)",
+    "ErrorNotSupportedTitle": "Not Supported"
+}

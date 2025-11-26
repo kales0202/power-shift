@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags like v0.0.1, v1.2.3, etc.
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Get version from tag
+        id: get_version
+        run: |
+          # Extract version from tag (e.g., v0.0.1 -> 0.0.1)
+          $version = "${{ github.ref_name }}"
+          $versionNumber = $version -replace '^v', ''
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "VERSION_NUMBER=$versionNumber" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+      
+      - name: Verify version consistency
+        run: |
+          $tagVersion = "${{ steps.get_version.outputs.VERSION_NUMBER }}"
+          $csprojPath = "src/PowerShift.csproj"
+          $csprojContent = Get-Content $csprojPath -Raw
+          
+          if ($csprojContent -match '<Version>(.*?)</Version>') {
+            $csprojVersion = $matches[1]
+            if ($csprojVersion -ne $tagVersion) {
+              Write-Error "Version mismatch! Tag: $tagVersion, csproj: $csprojVersion"
+              Write-Error "Please update <Version> in PowerShift.csproj to $tagVersion"
+              exit 1
+            }
+            Write-Host "✓ Version check passed: $tagVersion"
+          } else {
+            Write-Error "Could not find <Version> in $csprojPath"
+            exit 1
+          }
+        shell: pwsh
+      
+      - name: Build and publish
+        run: |
+          cd src
+          dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
+        shell: pwsh
+      
+      - name: Rename executable
+        run: |
+          $version = "${{ steps.get_version.outputs.VERSION }}"
+          $source = "src/bin/Release/net8.0-windows/win-x64/publish/PowerShift.exe"
+          $destination = "PowerShift-${version}_x64.exe"
+          Copy-Item $source $destination
+        shell: pwsh
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: PowerShift-${{ steps.get_version.outputs.VERSION }}_x64.exe
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
