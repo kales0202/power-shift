@@ -10,7 +10,8 @@
 
 - [x] **🚀 快速模式切换**：直接从系统托盘切换电源模式
 - [x] **🔄 即时反馈**：每种电源模式都有可视化的图标指示
-- [x] **🎯 开机自启**：可选“开机启动”，随 Windows 自动运行
+- [x] **⚡ 自动切换**：息屏5分钟后自动切换到最佳能效，亮屏自动切换到最佳性能（仅AC电源）
+- [x] **🎯 开机自启**：可选"开机启动"，随 Windows 自动运行
 - [x] **🌍 多语言支持**：内置多语言支持（英语、中文）
 - [x] **💾 轻量级**：单文件可执行程序，资源占用极低
 
@@ -50,7 +51,10 @@ power-shift/
 │   │   ├── PowerService.cs    # 电源模式管理
 │   │   ├── BootService.cs     # 启动管理
 │   │   ├── Localization.cs    # i18n 支持
-│   │   └── RegistryMonitor.cs # 注册表更改检测
+│   │   ├── RegistryMonitor.cs # 注册表更改检测
+│   │   ├── AutoSwitchService.cs    # 显示器状态自动切换
+│   │   ├── DisplayMonitorService.cs # 显示器状态监听
+│   │   └── Logger.cs          # 调试日志（仅DEBUG构建）
 │   ├── Utils/
 │   │   └── IconGenerator.cs   # 动态图标生成
 │   └── i18n/
@@ -64,19 +68,20 @@ power-shift/
 ```bash
 # 克隆仓库
 git clone https://github.com/kales0202/power-shift.git
-cd power-shift/src
+cd power-shift
 
 # 开发构建
-dotnet build
+dotnet build src/PowerShift.csproj
 
 # 发布构建
-dotnet build -c Release
+dotnet build src/PowerShift.csproj -c Release
 
 # 发布为单文件可执行程序
-dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
+dotnet publish src/PowerShift.csproj -c Debug -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish/debug
+dotnet publish src/PowerShift.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish/release
 ```
 
-编译后的可执行文件位于 `src/bin/Release/net8.0-windows/win-x64/publish/`。
+编译后的可执行文件位于 `publish/debug/` 和 `publish/release/`。
 
 ## 📝 许可证
 

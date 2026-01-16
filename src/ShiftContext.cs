@@ -6,22 +6,31 @@ using System.Windows.Forms;
 
 namespace PowerShift;
 
+/// <summary>
+/// Tray application context
+/// by Ai.Coding
+/// </summary>
 public class ShiftContext : ApplicationContext
 {
     private readonly NotifyIcon _notifyIcon;
     private readonly ContextMenuStrip _contextMenu;
     private RegistryMonitor? _registryMonitor;
-    
+    private readonly AutoSwitchService _autoSwitchService;
+
     // Menu Items
     private readonly ToolStripMenuItem _itemBoot;
     private readonly ToolStripMenuItem _itemStatus;
     private readonly ToolStripMenuItem _itemEfficiency;
     private readonly ToolStripMenuItem _itemBalanced;
     private readonly ToolStripMenuItem _itemPerformance;
+    private readonly ToolStripMenuItem _itemAutoSwitch;
 
     public ShiftContext()
     {
-        // 1. Initialize Menu
+        // 1. Initialize Services
+        _autoSwitchService = new AutoSwitchService();
+
+        // 2. Initialize Menu
         _contextMenu = new ContextMenuStrip();
 
         _itemBoot = new ToolStripMenuItem(Localization.MenuStartOnBoot, null, OnToggleBoot);
@@ -32,10 +41,17 @@ public class ShiftContext : ApplicationContext
         _itemBalanced = new ToolStripMenuItem(Localization.MenuBalanced, IconGenerator.GenerateBitmap(PowerMode.Balanced), (s, e) => SetMode(PowerMode.Balanced));
         _itemPerformance = new ToolStripMenuItem(Localization.MenuPerformance, IconGenerator.GenerateBitmap(PowerMode.Performance), (s, e) => SetMode(PowerMode.Performance));
 
+        _itemAutoSwitch = new ToolStripMenuItem(Localization.MenuAutoSwitch, null, OnToggleAutoSwitch);
+        var itemAutoSwitchDesc = new ToolStripMenuItem(Localization.MenuAutoSwitchDesc) { Enabled = false };
+
         var itemExit = new ToolStripMenuItem(Localization.MenuExit, null, OnExit);
 
         _contextMenu.Items.Add(_itemBoot);
+        _contextMenu.Items.Add(new ToolStripSeparator());
         _contextMenu.Items.Add(_itemStatus);
+        _contextMenu.Items.Add(_itemAutoSwitch);
+        _contextMenu.Items.Add(new ToolStripSeparator());
+        _contextMenu.Items.Add(itemAutoSwitchDesc);
         _contextMenu.Items.Add(new ToolStripSeparator());
         _contextMenu.Items.Add(_itemEfficiency);
         _contextMenu.Items.Add(_itemBalanced);
@@ -43,7 +59,7 @@ public class ShiftContext : ApplicationContext
         _contextMenu.Items.Add(new ToolStripSeparator());
         _contextMenu.Items.Add(itemExit);
 
-        // 2. Initialize Icon
+        // 3. Initialize Icon
         var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         var versionString = version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v0.0.1";
         
@@ -55,11 +71,11 @@ public class ShiftContext : ApplicationContext
             Visible = true
         };
 
-        // 3. Bind System Events
+        // 4. Bind System Events
         SystemEvents.PowerModeChanged += OnSystemPowerChanged;
         SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
         
-        // 4. Start Registry Monitor for instant updates
+        // 5. Start Registry Monitor for instant updates
         try
         {
             var key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes");
@@ -74,7 +90,7 @@ public class ShiftContext : ApplicationContext
             // If registry monitoring fails, rely on events only
         }
 
-        // 5. Initial State
+        // 6. Initial State
         BootService.SelfHeal(); // Fix registry path if needed
         RefreshState();
     }
@@ -83,6 +99,9 @@ public class ShiftContext : ApplicationContext
     {
         // Update Boot Checkbox
         _itemBoot.Checked = BootService.IsBootEnabled();
+
+        // Update Auto Switch Checkbox
+        _itemAutoSwitch.Checked = _autoSwitchService.IsEnabled;
 
         // Update Power Source Status
         bool isAc = PowerService.IsAcPower();
@@ -109,6 +128,7 @@ public class ShiftContext : ApplicationContext
 
     private void SetMode(PowerMode mode)
     {
+        Logger.Log($"Manual: SetMode to {mode}");
         PowerService.SetMode(mode);
         RefreshState();
     }
@@ -116,7 +136,16 @@ public class ShiftContext : ApplicationContext
     private void OnToggleBoot(object? sender, EventArgs e)
     {
         bool newState = !_itemBoot.Checked;
+        Logger.Log($"Manual: ToggleBoot to {newState}");
         BootService.SetBoot(newState);
+        RefreshState();
+    }
+
+    private void OnToggleAutoSwitch(object? sender, EventArgs e)
+    {
+        var newState = !_autoSwitchService.IsEnabled;
+        Logger.Log($"Manual: ToggleAutoSwitch to {newState}");
+        _autoSwitchService.IsEnabled = newState;
         RefreshState();
     }
 
@@ -148,6 +177,7 @@ public class ShiftContext : ApplicationContext
             SystemEvents.PowerModeChanged -= OnSystemPowerChanged;
             SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
             _registryMonitor?.Dispose();
+            _autoSwitchService.Dispose();
             _notifyIcon.Dispose();
             _contextMenu.Dispose();
         }

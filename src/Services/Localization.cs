@@ -83,6 +83,8 @@ public static class Localization
     public static string MenuEfficiency => Get("MenuEfficiency", "Best Efficiency");
     public static string MenuBalanced => Get("MenuBalanced", "Balanced");
     public static string MenuPerformance => Get("MenuPerformance", "Best Performance");
+    public static string MenuAutoSwitch => Get("MenuAutoSwitch", "Auto Switch");
+    public static string MenuAutoSwitchDesc => Get("MenuAutoSwitchDesc", "Screen off: save power; on: boost");
     public static string MenuExit => Get("MenuExit", "Exit");
 
     // Messages

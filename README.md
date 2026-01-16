@@ -10,6 +10,7 @@ A lightweight Windows system tray utility for quick power mode switching. Seamle
 
 - [x] **🚀 Quick Mode Switching**: Toggle between power modes directly from the system tray
 - [x] **🔄 Instant Feedback**: Visual icon indicators for each power mode
+- [x] **⚡ Auto Switch**: Automatically switch to efficiency mode when screen off (5min delay), performance mode when screen on (AC power only)
 - [x] **🎯 Startup Support**: Optional "Start on Boot" to launch automatically with Windows
 - [x] **🌍 Internationalization**: Built-in support for multiple languages (English, Chinese)
 - [x] **💾 Lightweight**: Single-file executable with minimal resource footprint
@@ -50,7 +51,10 @@ power-shift/
 │   │   ├── PowerService.cs    # Power mode management
 │   │   ├── BootService.cs     # Startup management
 │   │   ├── Localization.cs    # i18n support
-│   │   └── RegistryMonitor.cs # Registry change detection
+│   │   ├── RegistryMonitor.cs # Registry change detection
+│   │   ├── AutoSwitchService.cs    # Auto switch on display state
+│   │   ├── DisplayMonitorService.cs # Display state monitoring
+│   │   └── Logger.cs          # Debug logging (DEBUG build only)
 │   ├── Utils/
 │   │   └── IconGenerator.cs   # Dynamic icon generation
 │   └── i18n/
@@ -64,19 +68,20 @@ power-shift/
 ```bash
 # Clone the repository
 git clone https://github.com/kales0202/power-shift.git
-cd power-shift/src
+cd power-shift
 
 # Development build
-dotnet build
+dotnet build src/PowerShift.csproj
 
 # Release build
-dotnet build -c Release
+dotnet build src/PowerShift.csproj -c Release
 
 # Publish as single-file executable
-dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
+dotnet publish src/PowerShift.csproj -c Debug -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish/debug
+dotnet publish src/PowerShift.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish/release
 ```
 
-The compiled executable will be located in `src/bin/Release/net8.0-windows/win-x64/publish/`.
+The compiled executables will be located in `publish/debug/` and `publish/release/`.
 
 ## 📝 License
 
