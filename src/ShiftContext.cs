@@ -31,7 +31,10 @@ public class ShiftContext : ApplicationContext
         _autoSwitchService = new AutoSwitchService();
 
         // 2. Initialize Menu
-        _contextMenu = new ContextMenuStrip();
+        _contextMenu = new ContextMenuStrip
+        {
+            Renderer = new BorderlessCheckRenderer()
+        };
 
         _itemBoot = new ToolStripMenuItem(Localization.MenuStartOnBoot, null, OnToggleBoot);
         _itemStatus = new ToolStripMenuItem("...");
@@ -47,10 +50,9 @@ public class ShiftContext : ApplicationContext
         var itemExit = new ToolStripMenuItem(Localization.MenuExit, null, OnExit);
 
         _contextMenu.Items.Add(_itemBoot);
-        _contextMenu.Items.Add(new ToolStripSeparator());
         _contextMenu.Items.Add(_itemStatus);
-        _contextMenu.Items.Add(_itemAutoSwitch);
         _contextMenu.Items.Add(new ToolStripSeparator());
+        _contextMenu.Items.Add(_itemAutoSwitch);
         _contextMenu.Items.Add(itemAutoSwitchDesc);
         _contextMenu.Items.Add(new ToolStripSeparator());
         _contextMenu.Items.Add(_itemEfficiency);

@@ -43,10 +43,6 @@ public static class IconGenerator
         using var brush = new SolidBrush(color);
         int margin = Math.Max(2, size / 8);
         g.FillEllipse(brush, margin, margin, size - margin * 2, size - margin * 2);
-        
-        // Optional: Add a subtle border
-        using var pen = new Pen(Color.FromArgb(200, color), Math.Max(1, size / 16));
-        g.DrawEllipse(pen, margin, margin, size - margin * 2, size - margin * 2);
 
         IntPtr hIcon = bitmap.GetHicon();
         Icon icon = Icon.FromHandle(hIcon);
