@@ -5,7 +5,7 @@ using System.Windows.Forms;
 namespace PowerShift.Services;
 
 /// <summary>
-/// Auto switch power mode service: switch to efficiency when display off, performance when display on
+/// Auto switch power mode service: switch to efficiency when display off, restore previous mode when display on
 /// by Ai.Coding
 /// </summary>
 public class AutoSwitchService : IDisposable
@@ -18,6 +18,10 @@ public class AutoSwitchService : IDisposable
     private readonly System.Windows.Forms.Timer _delayTimer;
     private bool _isEnabled;
     private bool _initialized;
+    private bool _efficiencyApplied;
+    private bool _disposed;
+    private PowerMode? _savedAcMode;
+    private PowerMode? _savedDcMode;
 
     public bool IsEnabled
     {
@@ -52,11 +56,7 @@ public class AutoSwitchService : IDisposable
     {
         var isAc = PowerService.IsAcPower();
         Logger.Log($"PowerModeChanged: {e.Mode}, IsAC={isAc}");
-        if (!isAc && _delayTimer.Enabled)
-        {
-            Logger.Log("Switched to DC power, stopping timer");
-            _delayTimer.Stop();
-        }
+        // Don't stop timer or clear saved mode - let it work on both AC and DC
     }
 
     private void OnDisplayStateChanged(DisplayState state)
@@ -71,25 +71,69 @@ public class AutoSwitchService : IDisposable
             return;
         }
 
-        if (!_isEnabled || !PowerService.IsAcPower()) return;
+        if (!_isEnabled) return;
+
+        var isAc = PowerService.IsAcPower();
 
         switch (state)
         {
             case DisplayState.Off:
                 if (!_delayTimer.Enabled)
                 {
-                    Logger.Log("Display off, starting delay timer");
+                    // Save both AC and DC modes
+                    var acMode = PowerService.GetMode(true);
+                    var dcMode = PowerService.GetMode(false);
+
+                    if (acMode != PowerMode.Efficiency)
+                    {
+                        _savedAcMode = acMode;
+                        Logger.Log($"Display off, saved AC mode: {acMode}");
+                    }
+                    else
+                    {
+                        Logger.Log($"Display off, AC mode: {acMode}, not saved");
+                    }
+
+                    if (dcMode != PowerMode.Efficiency)
+                    {
+                        _savedDcMode = dcMode;
+                        Logger.Log($"Display off, saved DC mode: {dcMode}");
+                    }
+                    else
+                    {
+                        Logger.Log($"Display off, DC mode: {dcMode}, not saved");
+                    }
+
                     _delayTimer.Start();
                 }
                 break;
             case DisplayState.On:
                 if (_delayTimer.Enabled)
                 {
-                    Logger.Log("Display on, stopping timer");
+                    Logger.Log("Display on, timer stopped");
                     _delayTimer.Stop();
                 }
-                Logger.Log("Display on, switching to Performance");
-                PowerService.SetMode(PowerMode.Performance);
+
+                // Only restore if efficiency mode was actually applied
+                if (_efficiencyApplied)
+                {
+                    var savedMode = isAc ? _savedAcMode : _savedDcMode;
+                    if (savedMode != null)
+                    {
+                        Logger.Log($"Display on ({(isAc ? "AC" : "DC")}), restoring mode: {savedMode}");
+                        PowerService.SetMode(savedMode.Value);
+                    }
+                    else
+                    {
+                        Logger.Log($"Display on ({(isAc ? "AC" : "DC")}), no saved mode, restoring to Balanced");
+                        PowerService.SetMode(PowerMode.Balanced);
+                    }
+                }
+
+                // Clear saved modes and reset flag
+                _savedAcMode = null;
+                _savedDcMode = null;
+                _efficiencyApplied = false;
                 break;
             // DisplayState.Dimmed - no action
         }
@@ -98,10 +142,13 @@ public class AutoSwitchService : IDisposable
     private void OnDelayTimerTick(object? sender, EventArgs e)
     {
         _delayTimer.Stop();
-        if (_isEnabled && PowerService.IsAcPower())
+        if (_isEnabled)
         {
             Logger.Log("Timer elapsed, switching to Efficiency");
-            PowerService.SetMode(PowerMode.Efficiency);
+            if (PowerService.SetMode(PowerMode.Efficiency))
+            {
+                _efficiencyApplied = true;
+            }
         }
     }
 
@@ -119,10 +166,14 @@ public class AutoSwitchService : IDisposable
 
     public void Dispose()
     {
+        if (_disposed) return;
+
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         _delayTimer.Stop();
         _delayTimer.Dispose();
         _displayMonitor.DisplayStateChanged -= OnDisplayStateChanged;
         _displayMonitor.Dispose();
+
+        _disposed = true;
     }
 }

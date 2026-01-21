@@ -10,7 +10,7 @@ A lightweight Windows system tray utility for quick power mode switching. Seamle
 
 - [x] **🚀 Quick Mode Switching**: Toggle between power modes directly from the system tray
 - [x] **🔄 Instant Feedback**: Visual icon indicators for each power mode
-- [x] **⚡ Auto Switch**: Automatically switch to efficiency mode when screen off (5min delay), performance mode when screen on (AC power only)
+- [x] **⚡ Auto Switch**: Automatically switch to efficiency mode when screen off (5min delay), restore previous mode when screen on
 - [x] **🎯 Startup Support**: Optional "Start on Boot" to launch automatically with Windows
 - [x] **🌍 Internationalization**: Built-in support for multiple languages (English, Chinese)
 - [x] **💾 Lightweight**: Single-file executable with minimal resource footprint

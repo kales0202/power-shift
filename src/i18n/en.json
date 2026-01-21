@@ -6,7 +6,7 @@
     "MenuBalanced": "Balanced",
     "MenuPerformance": "Best Performance",
     "MenuAutoSwitch": "Auto Switch",
-    "MenuAutoSwitchDesc": "Screen off: save power; on: boost",
+    "MenuAutoSwitchDesc": "Screen off: save power; on: restore",
     "MenuExit": "Exit",
     "AppName": "PowerShift",
     "ErrorNotSupported": "Your device does not support power mode switching.\n(ActiveOverlayAcPowerScheme not detected)",

@@ -56,11 +56,10 @@ public static class PowerService
         return true; // Default to AC if unknown
     }
 
-    public static PowerMode GetCurrentMode()
+    public static PowerMode GetMode(bool isAc)
     {
         try
         {
-            bool isAc = IsAcPower();
             string valueName = isAc ? "ActiveOverlayAcPowerScheme" : "ActiveOverlayDcPowerScheme";
 
             using var key = Registry.LocalMachine.OpenSubKey(PowerSchemesPath);
@@ -75,14 +74,19 @@ public static class PowerService
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore errors, return Unknown
+            Logger.Log($"GetMode failed for {(isAc ? "AC" : "DC")}: {ex.Message}");
         }
-        return PowerMode.Unknown;
+        return PowerMode.Balanced; // Return Balanced as default instead of Unknown
     }
 
-    public static void SetMode(PowerMode mode)
+    public static PowerMode GetCurrentMode()
+    {
+        return GetMode(IsAcPower());
+    }
+
+    public static bool SetMode(PowerMode mode)
     {
         Guid targetGuid = mode switch
         {
@@ -92,14 +96,13 @@ public static class PowerService
             _ => BalancedGuid
         };
 
-        // 1. Call API to set effective mode immediately
-        PowerSetActiveOverlayScheme(targetGuid);
-
-        // 2. Update Registry for persistence (Only for the CURRENT power source)
-        // Note: The API usually updates the registry, but we do it to be sure or if we want to force a specific state.
-        // Actually, PowerSetActiveOverlayScheme DOES update the registry for the current scheme (AC or DC).
-        // So we might not need to write to registry manually if the API works.
-        // However, the user's log showed RegSetValue, which implies the API call triggers that.
-        // We will trust the API first.
+        // Call API to set effective mode immediately
+        uint result = PowerSetActiveOverlayScheme(targetGuid);
+        if (result != 0)
+        {
+            Logger.Log($"SetMode failed: {mode}, error code: {result}");
+            return false;
+        }
+        return true;
     }
 }

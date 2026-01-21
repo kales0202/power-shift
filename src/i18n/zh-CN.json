@@ -6,7 +6,7 @@
     "MenuBalanced": "平衡",
     "MenuPerformance": "最佳性能",
     "MenuAutoSwitch": "自动切换",
-    "MenuAutoSwitchDesc": "息屏省电，亮屏高性能",
+    "MenuAutoSwitchDesc": "息屏省电，亮屏恢复",
     "MenuExit": "退出",
     "AppName": "PowerShift",
     "ErrorNotSupported": "您的设备不支持电源模式切换功能。\n(未检测到 ActiveOverlayAcPowerScheme)",
